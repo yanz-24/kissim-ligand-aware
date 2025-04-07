@@ -38,6 +38,9 @@ class FingerprintBase:
             - "hinge_region", "dfg_region", "front_pocket", "center"
           - "moments"
             - "hinge_region", "dfg_region", "front_pocket", "center"
+        - "ligand"
+            - "molecular centroid (ctd)", "closest atom to ctd (cst)", "farthest atom to ctd (fct)", "farthest atom to fct (ftf)"
+
     residue_ids : list of int
         Pocket residue PDB IDs.
     residue_ixs : list of int
@@ -48,6 +51,7 @@ class FingerprintBase:
     physicochemical
     distances
     moments
+    ligand
 
     Notes
     -----
@@ -70,6 +74,13 @@ class FingerprintBase:
       - Moment 1: Mean
       - Moment 2: Standard deviation
       - Moment 3: Skewness (cube root)
+
+    LIGAND features (85 x 4 matrix = 340 bits):
+
+    - Distance to the centroid of the ligand
+    - Distance to the closest atom to the centroid of the ligand
+    - Distance to the farthest atom to the centroid of the ligand
+    - Distance to the farthest atom to the farthest atom to the centroid of the ligand
 
     The terminology used for the feature hierarchy is the following:
     - Feature category, e.g. spatial or physicochemical
@@ -132,6 +143,24 @@ class FingerprintBase:
         features = pd.DataFrame(features, index=[1, 2, 3])
         features.index.name = "moments"
         return features
+    
+    @property
+    def ligand(self):
+        """
+        Ligand distance-based features.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Distances per ligand feature (columns) and pocket residue by KLIFS index (rows).
+        """
+        features = self.values_dict["ligand"]
+        features = pd.DataFrame(features, index=self.residue_ixs)
+        features = features[
+            ["ctd", "cst", "fct", "ftf"]
+        ]
+        features.index.name = "residue.ix"
+        return features
 
     @property
     def subpocket_centers(self):
@@ -149,7 +178,13 @@ class FingerprintBase:
 
         return subpocket_centers_df
 
-    def values_array(self, physicochemical=True, spatial_distances=True, spatial_moments=True):
+    def values_array(
+            self, 
+            physicochemical=True, 
+            spatial_distances=True, 
+            spatial_moments=True,
+            ligand=False,
+            ):
         """
         Get the full set or subset of features as 1D array.
         Default set of features includes physicochemical and spatial moments features.
@@ -162,6 +197,8 @@ class FingerprintBase:
             Include spatial distances features (default: no).
         spatial_moments : bool
             Include spatial moments features (default: yes).
+        ligand : bool
+            Include ligand features (default: no).
 
         Returns
         -------
@@ -182,6 +219,10 @@ class FingerprintBase:
         if spatial_moments:
             moments_features = self.moments.to_numpy().flatten()
             features.append(moments_features)
+
+        if ligand:
+            ligand_features = self.ligand.to_numpy().flatten()
+            features.append(ligand_features)
 
         # Concatenate physicochemical and spatial features
         if len(features) > 0:

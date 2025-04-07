@@ -13,6 +13,7 @@ from kissim.encoding.features import (
     SideChainOrientationFeature,
     SolventExposureFeature,
     SubpocketsFeature,
+    LigandFeature,
 )
 
 logger = logging.getLogger(__name__)
@@ -101,6 +102,7 @@ class Fingerprint(FingerprintBase):
                 pocket_bp
             )
             values_dict["spatial"] = fingerprint._get_spatial_features_dict(pocket_df)
+            values_dict["ligand"] = fingerprint._get_ligand_features_dict(pocket_df)
             fingerprint.values_dict = values_dict
 
         return fingerprint
@@ -160,5 +162,31 @@ class Fingerprint(FingerprintBase):
         features["distances"] = feature._distances
         features["moments"] = feature._moments
         features["subpocket_centers"] = feature._subpocket_centers
+
+        return features
+
+    def _get_ligand_features_dict(self, pocket_df):
+        """
+        Get ligand-based spatial features.
+
+        Parameters
+        ----------
+        pocket_df : kissim.io.PocketDataFrame
+            DataFrame-based pocket object.
+
+        Returns
+        -------
+        dict of list of float
+            Distance values (values) for ligand-related geometric points (keys).
+        """
+
+        # Set up physicochemical features
+        features = {}
+        # Add ligand features
+        feature = LigandFeature.from_pocket(pocket_df)
+        features["ctd"] = feature._distances_ctd
+        features["cst"] = feature._distances_cst
+        features["fct"] = feature._distances_fct
+        features["ftf"] = feature._distances_ftf
 
         return features
