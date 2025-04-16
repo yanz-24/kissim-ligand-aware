@@ -184,9 +184,9 @@ class Fingerprint(FingerprintBase):
         features = {}
         # Add ligand features
         feature = LigandFeature.from_pocket(pocket_df)
-        features["ctd"] = feature._distances_ctd
-        features["cst"] = feature._distances_cst
-        features["fct"] = feature._distances_fct
-        features["ftf"] = feature._distances_ftf
+        features["ctd"] = feature._ligand['dist_ctd']
+        features["cst"] = feature._ligand['dist_cst']
+        features["fct"] = feature._ligand['dist_fct']
+        features["ftf"] = feature._ligand['dist_ftf']
 
         return features
