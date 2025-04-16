@@ -46,6 +46,7 @@ class KlifsToKissimData:
         self.extension = None
         self.residue_ids = None
         self.residue_ixs = None
+        self.ligand_expo_id = None
 
     @classmethod
     def from_structure_klifs_id(cls, structure_klifs_id, klifs_session=None):
@@ -95,6 +96,8 @@ class KlifsToKissimData:
             return None
         # Get the kinase name
         data.kinase_name = data._get_kinase_name()
+        # Get the ligand expo id
+        data.ligand_expo_id = data._get_ligand_expo_id()
 
         return data
 
@@ -226,3 +229,17 @@ class KlifsToKissimData:
         structures = self.klifs_session.structures.by_structure_klifs_id(self.structure_klifs_id)
         kinase_name = structures.squeeze()["kinase.klifs_name"]
         return kinase_name
+    
+    def _get_ligand_expo_id(self):
+        """
+        Get ligand expo ID.
+
+        Returns
+        -------
+        ligand_expo_id : str
+            Ligand name.
+        """
+
+        ligands = self.klifs_session.ligands.by_structure_klifs_id(self.structure_klifs_id)
+        ligand_expo_id = ligands.squeeze()["ligand.expo_id"]
+        return ligand_expo_id
