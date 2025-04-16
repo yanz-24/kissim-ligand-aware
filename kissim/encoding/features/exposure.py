@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class SolventExposureFeature(BaseFeature):
     """
-    Exposure to the solvent (physicochemical feature) for each pocket residue.
+    Exposure to the solvent for each pocket residue.
 
     Attributes
     ----------
