@@ -165,3 +165,9 @@ for how in ["fine", "coarse"]:
 # KLIFS pocket residue subsets by DFG conformation
 with open(PATH_DATA / "klifs_pocket_residue_subset.json") as f:
     KLIFS_POCKET_RESIDUE_SUBSET = json.load(f)
+
+# TODO: Set better cutoffs for ligand features
+LIGAND_CUTOFFS = {
+    "min": 0.0,
+    "max": 20.0
+}

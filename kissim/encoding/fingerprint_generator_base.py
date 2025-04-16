@@ -95,6 +95,19 @@ class FingerprintGeneratorBase:
         """
 
         return self._feature_group("moments")
+    
+    @property
+    def ligand(self):
+        """
+        Get ligand feature vectors per feature type and pocket.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Ligand feature vectors per feature type (columns) and pocket (rows).
+        """
+
+        return self._feature_group("ligand")
 
     @property
     def physicochemical_exploded(self):
@@ -135,6 +148,19 @@ class FingerprintGeneratorBase:
         """
 
         return self._feature_group_exploded("moments")
+    
+    @property
+    def ligand_exploded(self):
+        """
+        Get ligand feature values per feature type and bit position.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Ligand feature values per feature type (columns) and pocket / bit position (rows).
+        """
+
+        return self._feature_group_exploded("ligand")
 
     def _feature_group(self, feature_group):
         """
@@ -143,7 +169,7 @@ class FingerprintGeneratorBase:
         Parameter
         ---------
         feature_group : str
-            Feature group, i.e. "physicochemical", "distances", or "moments".
+            Feature group, i.e. "physicochemical", "distances", "moments", or "ligand".
 
         Returns
         -------
@@ -154,14 +180,12 @@ class FingerprintGeneratorBase:
         fingerprints = self.data
 
         if fingerprints is not None:
-            features = {
-                structure_klifs_id: (
-                    fingerprint.values_dict[feature_group]
-                    if feature_group == "physicochemical"
-                    else fingerprint.values_dict["spatial"][feature_group]
-                )
-                for structure_klifs_id, fingerprint in fingerprints.items()
-            }
+            features = {}
+            for structure_klifs_id, fingerprint in fingerprints.items():
+                if feature_group in ["physicochemical", "ligand"]:
+                    features[structure_klifs_id] = fingerprint.values_dict[feature_group]
+                elif feature_group in ["distances", "moments"]:
+                    features[structure_klifs_id] = fingerprint.values_dict["spatial"][feature_group]
             features = pd.DataFrame(features).transpose()
         else:
             features = None

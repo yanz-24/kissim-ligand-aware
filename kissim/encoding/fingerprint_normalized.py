@@ -6,7 +6,7 @@ Defines the normalized kissim fingerprint.
 
 import logging
 
-from kissim.definitions import DISTANCE_CUTOFFS, MOMENT_CUTOFFS, DISCRETE_FEATURE_VALUES
+from kissim.definitions import DISTANCE_CUTOFFS, LIGAND_CUTOFFS, MOMENT_CUTOFFS, DISCRETE_FEATURE_VALUES
 from kissim.utils import min_max_normalization_vector
 from kissim.encoding import FingerprintBase
 
@@ -63,6 +63,12 @@ class FingerprintNormalized(FingerprintBase):
         values_dict_normalized["spatial"]["moments"] = self._normalize_moments_bits(
             fingerprint.values_dict["spatial"]["moments"], fine_grained
         )
+
+        # New ligand normalization (if present in the fingerprint)
+        if "ligand" in fingerprint.values_dict:
+            values_dict_normalized["ligand"] = self._normalize_ligand_bits(
+                fingerprint.values_dict["ligand"]
+            )
 
         return values_dict_normalized
 
@@ -169,6 +175,33 @@ class FingerprintNormalized(FingerprintBase):
                 values_normalized_dict[subpocket_name] = min_max_normalization_vector(
                     values, minimum.squeeze().to_list(), maximum.squeeze().to_list()
                 )
+            return values_normalized_dict
+
+        else:
+            return None
+
+    def _normalize_ligand_bits(self, values_dict):
+        """
+        Normalize ligand-pocket distances using pre-defined cutoffs.
+
+        Parameters
+        ----------
+        values_dict : dict of list of float
+            Ligand bits.
+
+        Returns
+        -------
+        dict of list of float
+            Normalized ligand bits.
+        """
+
+        values_normalized_dict = {}
+
+        if values_dict is not None:
+            for feature_name, values in values_dict.items():
+                values_normalized_dict[feature_name] = min_max_normalization_vector(
+                    values, LIGAND_CUTOFFS["min"], LIGAND_CUTOFFS["max"]
+                ) 
             return values_normalized_dict
 
         else:
