@@ -37,10 +37,7 @@ class LigandFeature(BaseFeature):
         self.name = None
         self._residue_ids = None
         self._residue_ixs = None
-        self._distances_ctd = None
-        self._distances_cst = None
-        self._distances_fct = None
-        self._distances_ftf = None
+        self._ligand = None
 
     @classmethod
     def from_pocket(cls, pocket: PocketDataFrame, ligand): #TODO: add ligand type hint
@@ -63,11 +60,7 @@ class LigandFeature(BaseFeature):
         feature._residue_ixs = pocket._residue_ixs
 
         # Calculate distances from ligand to pocket residues
-        distances = feature._calculate_distance_ligand(pocket, ligand)
-        feature._distances_ctd = distances["dist_ctd"].to_numpy()
-        feature._distances_cst = distances["dist_cst"].to_numpy()
-        feature._distances_fct = distances["dist_fct"].to_numpy()
-        feature._distances_ftf = distances["dist_ftf"].to_numpy()
+        feature._ligand = feature._calculate_distance_ligand(pocket, ligand)
 
         return feature
 
@@ -81,17 +74,12 @@ class LigandFeature(BaseFeature):
         list of float
             Concatenation of all ligand-residue distances.
         """
-        return (
-            self._distances_ctd
-            + self._distances_cst
-            + self._distances_fct
-            + self._distances_ftf
-        )
+        return self._ligand
 
     @property
     def details(self):
         """
-        Feature details.
+        Feature details for ligand features.
 
         Returns
         -------
@@ -100,10 +88,10 @@ class LigandFeature(BaseFeature):
         """
         return pd.DataFrame({
             "residue_id": self._residue_ids,
-            "ctd": self._distances_ctd,
-            "cst": self._distances_cst,
-            "fct": self._distances_fct,
-            "ftf": self._distances_ftf,
+            "ctd": self._ligand['dist_ctd'],
+            "cst": self._ligand['dist_cst'],
+            "fct": self._ligand['dist_fct'],
+            "ftf": self._ligand['dist_ftf'],
         })
 
 
@@ -120,18 +108,11 @@ class LigandFeature(BaseFeature):
 
         Returns
         -------
-        pandas.DataFrame
-            DataFrame of distances from ligand to pocket residues. Each 
+        dict of (str: list of float)
+            Distances from ligand to pocket residues. 
         """
-
-        # TODO: implement this function
-        # fetch ligand coords
-        # fetch pocket residues coords
-        # calculate the centroid of ligand 
-        # calculate distances from ligand centroid to all pocket residues
-        # calculate distances from ligand closest heavy atom to all pocket residues
         pocket_coords = pocket.ca_atoms[["atom.x", "atom.y", "atom.z"]].to_numpy()
-        ligand_coords = ligand_df[['x_coord', 'y_coord', 'z_coord']].to_numpy()
+        ligand_coords = ligand_df[['x_coord', 'y_coord', 'z_coord']].to_numpy() #TODO: to be updated
         ligand_centroid = ligand_coords.mean(axis=0)
 
         centroid_distances = []
@@ -173,10 +154,10 @@ class LigandFeature(BaseFeature):
                 ftf_distances.append(d_ftf)
 
         # Add results to DataFrame
-        residues_df = pd.DataFrame()
-        residues_df['dist_ctd'] = centroid_distances
-        residues_df['dist_cst'] = closest_atom_distances
-        residues_df['dist_fct'] = farthest_atom_distances
-        residues_df['dist_ftf'] = ftf_distances
+        ligand_distances = {}
+        ligand_distances['dist_ctd'] = centroid_distances
+        ligand_distances['dist_cst'] = closest_atom_distances
+        ligand_distances['dist_fct'] = farthest_atom_distances
+        ligand_distances['dist_ftf'] = ftf_distances
 
-        return residues_df
+        return ligand_distances
