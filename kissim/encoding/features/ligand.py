@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from kissim.encoding.features.base import BaseFeature
+from kissim.io.dataframe import PocketDataFrame
 
 
 class LigandFeature(BaseFeature):
@@ -42,7 +43,7 @@ class LigandFeature(BaseFeature):
         self._distances_ftf = None
 
     @classmethod
-    def from_pocket(cls, pocket):
+    def from_pocket(cls, pocket: PocketDataFrame, ligand): #TODO: add ligand type hint
         """
         Generate ligand-based features from pocket.
 
@@ -62,15 +63,18 @@ class LigandFeature(BaseFeature):
         feature._residue_ixs = pocket._residue_ixs
 
         # Calculate distances from ligand to pocket residues
-        distances = pocket.calculate_distance_ligand()
-        # TODO: add distance calculations
+        distances = feature._calculate_distance_ligand(pocket, ligand)
+        feature._distances_ctd = distances["dist_ctd"].to_numpy()
+        feature._distances_cst = distances["dist_cst"].to_numpy()
+        feature._distances_fct = distances["dist_fct"].to_numpy()
+        feature._distances_ftf = distances["dist_ftf"].to_numpy()
 
         return feature
 
     @property
     def values(self):
         """
-        Feature values.
+        Ligand feature values.
 
         Returns
         -------
@@ -103,20 +107,21 @@ class LigandFeature(BaseFeature):
         })
 
 
-    def _calculate_distance_ligand(self):
+    def _calculate_distance_ligand(self, pocket: pd.DataFrame, ligand_df: pd.DataFrame):
         """
         Calculate distances between ligand's key geometric points and all 
         pocket residues (CA atoms).
 
         Parameters
         ----------
-        pocket : kissim.io.PocketBioPython
-            Biopython-based pocket object.
+        pocket : kissim.io.PocketDataFrame
+            Pocket object.
+        TODO: add ligand
 
         Returns
         -------
-        list of float
-            Distances between ligand's key geometric points and all pocket residues.
+        pandas.DataFrame
+            DataFrame of distances from ligand to pocket residues. Each 
         """
 
         # TODO: implement this function
@@ -125,3 +130,53 @@ class LigandFeature(BaseFeature):
         # calculate the centroid of ligand 
         # calculate distances from ligand centroid to all pocket residues
         # calculate distances from ligand closest heavy atom to all pocket residues
+        pocket_coords = pocket.ca_atoms[["atom.x", "atom.y", "atom.z"]].to_numpy()
+        ligand_coords = ligand_df[['x_coord', 'y_coord', 'z_coord']].to_numpy()
+        ligand_centroid = ligand_coords.mean(axis=0)
+
+        centroid_distances = []
+        closest_atom_distances = []
+        farthest_atom_distances = []
+        ftf_distances = []
+
+        for res_coord in pocket_coords:
+            if pd.isnull(res_coord).all():
+                centroid_distances.append(np.nan) # ctd
+                closest_atom_distances.append(np.nan) # cst
+                farthest_atom_distances.append(np.nan)
+                ftf_distances.append(np.nan)
+
+            else:
+                # Distance to centroid (ctd)
+                d_centroid = np.linalg.norm(res_coord - ligand_centroid)
+
+                # Distances from this residue to all ligand atoms
+                dists = np.linalg.norm(ligand_coords - res_coord, axis=1)
+
+                # Closest and farthest atom indices
+                idx_closest = np.argmin(dists) # cst
+                idx_farthest = np.argmax(dists) # fct
+                fct_coord = ligand_coords[idx_farthest]
+
+                # Now compute distances from fct to all other ligand atoms
+                fct_to_others = np.linalg.norm(ligand_coords - fct_coord, axis=1)
+                idx_ftf = np.argmax(fct_to_others)
+                ftf_coord = ligand_coords[idx_ftf]
+
+                # Distance from residue to ftf
+                d_ftf = np.linalg.norm(res_coord - ftf_coord)
+
+                # Append all distances
+                centroid_distances.append(d_centroid) # ctd
+                closest_atom_distances.append(dists[idx_closest]) # cst
+                farthest_atom_distances.append(dists[idx_farthest])
+                ftf_distances.append(d_ftf)
+
+        # Add results to DataFrame
+        residues_df = pd.DataFrame()
+        residues_df['dist_ctd'] = centroid_distances
+        residues_df['dist_cst'] = closest_atom_distances
+        residues_df['dist_fct'] = farthest_atom_distances
+        residues_df['dist_ftf'] = ftf_distances
+
+        return residues_df
