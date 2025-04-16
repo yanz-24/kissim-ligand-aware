@@ -84,7 +84,12 @@ class PocketBioPython(PocketBase):
         data = KlifsToKissimData.from_structure_klifs_id(structure_klifs_id, klifs_session)
         if data:
             pocket = cls.from_text(
-                data.text, data.extension, data.residue_ids, data.residue_ixs, structure_klifs_id
+                data.text, 
+                data.extension, 
+                data.residue_ids, 
+                data.residue_ixs, 
+                structure_klifs_id,
+                data.ligand_expo_id,
             )
             return pocket
         else:
@@ -304,6 +309,38 @@ class PocketBioPython(PocketBase):
             for residue, exposure in self._hse_cb_complex.property_dict.items()
             if (residue[1][1] in self._residue_ids) and (residue[1][2] == " ")
         }
+    
+    @property
+    def ligand(self):
+        """
+        Pocket ligand.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Pocket ligand atoms (rows) with the following columns:
+            - "residue.id": Residue ID
+            - "ligand.atom": Ligand atom (Bio.PDB.Atom.Atom)
+            - "ligand.vector": Ligand atom vector (Bio.PDB.vectors.Vector)
+        """
+
+        residues = list(self._data_complex.get_residues())
+
+        ligand_atoms = []
+        ligand_vectors = []
+
+        for residue in residues:
+            if residue.get_resname() == self.ligand_expo_id:
+                self._ligand_residue = residue
+        
+        for atom in self._ligand_residue.get_atoms():
+            ligand_atoms.append(atom)
+            ligand_vectors.append(atom.get_vector())
+        ligand = pd.DataFrame(
+            zip(ligand_atoms, ligand_vectors),
+            columns=["ligand.atom", "ligand.vector"],
+        )
+        return ligand
 
     def _ca_atom(self, residue_id):
         """
