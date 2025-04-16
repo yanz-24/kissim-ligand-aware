@@ -118,13 +118,13 @@ class PocketBioPython(PocketBase):
             filename = "complex.pdb"
             with open(filename, "w") as f:
                 f.write(text)
-                # Get biopython Structure object
-                structure = Biopython.from_file(filename)
-                # KLIFS PDB files contain only one model and one chain - get their IDs
-                model_id = next(structure.get_models()).id
-                chain_id = next(structure.get_chains()).id
-                # Get biopython Chain object
-                chain = structure[model_id][chain_id]
+            # Get biopython Structure object
+            structure = Biopython.from_file(filename)
+            # KLIFS PDB files contain only one model and one chain - get their IDs
+            model_id = next(structure.get_models()).id
+            chain_id = next(structure.get_chains()).id
+            # Get biopython Chain object
+            chain = structure[model_id][chain_id]
 
         pocket = cls()
         pocket.name = name
