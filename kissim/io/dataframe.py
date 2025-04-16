@@ -31,7 +31,7 @@ class PocketDataFrame(Pocket):
         data = KlifsToKissimData.from_structure_klifs_id(structure_klifs_id, klifs_session)
         if data:
             pocket = cls.from_text(
-                data.text, data.extension, data.residue_ids, data.residue_ixs, structure_klifs_id
+                data.text, data.extension, data.residue_ids, data.residue_ixs, structure_klifs_id, data.ligand_expo_id,
             )
             return pocket
         else:
