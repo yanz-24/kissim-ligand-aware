@@ -230,6 +230,15 @@ class KlifsToKissimData:
         kinase_name = structures.squeeze()["kinase.klifs_name"]
         return kinase_name
     
+    def _get_kinase_name(self):
+        """
+        TODO docstring + unit test!!
+        """
+
+        structures = self.klifs_session.structures.by_structure_klifs_id(self.structure_klifs_id)
+        kinase_name = structures.squeeze()["kinase.klifs_name"]
+        return kinase_name
+    
     def _get_ligand_expo_id(self):
         """
         Get ligand expo ID.
@@ -240,6 +249,5 @@ class KlifsToKissimData:
             Ligand name.
         """
 
-        ligands = self.klifs_session.ligands.by_structure_klifs_id(self.structure_klifs_id)
-        ligand_expo_id = ligands.squeeze()["ligand.expo_id"]
+        ligand_expo_id = self.klifs_session.structures.by_structure_klifs_id(self.structure_klifs_id)["ligand.expo_id"][0]
         return ligand_expo_id
