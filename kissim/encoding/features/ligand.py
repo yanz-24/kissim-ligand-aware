@@ -23,14 +23,12 @@ class LigandFeature(BaseFeature):
         Residue IDs.
     _residue_ixs : list of int
         Residue indices.
-    _distances_ctd : list of float
-        Distance from pocket residues to ligand centroid.
-    _distances_cst : list of float
-        Distance from pocket residues to ligand closest heavy atom from the residue.
-    _distances_fct : list of float
-        Distance from pocket residues to ligand furthest heavy atom from the residue.
-    _distances_ftf : list of float
-        Distance from pocket residues to the ligand atom farthest from the furthest atom.
+    _ligand : dict of (str: list of float)
+        Distances from ligand to pocket residues. The keys are:
+        - dist_ctd: distance to centroid
+        - dist_cst: distance to closest atom
+        - dist_fct: distance to farthest atom
+        - dist_ftf: distance to farthest-to-farthest atom
     """
 
     def __init__(self):
