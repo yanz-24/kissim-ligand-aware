@@ -12,6 +12,32 @@ Structural kinase similarity (`kissim`)
 
 ![Subpocket-based structural fingerprint for kinase pockets](docs/_static/kissim_toc.png)
 
+## 📌 Version Information
+
+**Current Stable Version:** `v1.0`  
+**Release Date:** 2025-05-06  
+**Status:** ✅ Stable and production-ready
+
+### 🔄 Changelog for v1.0
+**Added Ligand Distance Feature**:  Introduced a new feature that computes distances between ligands and key residues of kinase pocket
+
+You can check out this version using:
+> ```bash
+> git checkout tags/v1.0
+> ```
+
+---
+
+## 🚧 Ongoing Development
+
+Future development is being carried out on the [`dev`](https://github.com/yanz-24/kissim-ligand-aware/tree/dev) branch.
+
+### Planned Features:
+
+  Ligand distance will be integrated into the weighting system — it can act either as a scaling weight or as a threshold to include/exclude residue features.
+
+
+
 ## Description
 
 The `kissim` package offers a novel fingerprinting strategy designed specifically for kinase pockets, 
