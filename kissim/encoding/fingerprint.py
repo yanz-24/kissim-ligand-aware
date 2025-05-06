@@ -102,7 +102,7 @@ class Fingerprint(FingerprintBase):
         if ligand_expo_id:
             ligand_df = LigandDataFrame.from_text(
                 text, extension, ligand_expo_id
-            ).df
+            )
         if pocket_bp is None or pocket_df is None:
             logger.warning(f"{structure_name}: Empty fingerprint (pocket unaccessible).")
             fingerprint = None

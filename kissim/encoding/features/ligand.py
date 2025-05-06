@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from kissim.encoding.features.base import BaseFeature
-from kissim.io.dataframe import PocketDataFrame
+from kissim.io.dataframe import PocketDataFrame, LigandDataFrame
 
 
 class LigandFeature(BaseFeature):
@@ -40,7 +40,7 @@ class LigandFeature(BaseFeature):
         self._ligand = None
 
     @classmethod
-    def from_pocket(cls, pocket: PocketDataFrame, ligand): #TODO: add ligand type hint
+    def from_pocket(cls, pocket: PocketDataFrame, ligand: LigandDataFrame):
         """
         Generate ligand-based features from pocket.
 
@@ -95,7 +95,7 @@ class LigandFeature(BaseFeature):
         })
 
 
-    def _calculate_distance_ligand(self, pocket: pd.DataFrame, ligand_df: pd.DataFrame):
+    def _calculate_distance_ligand(self, pocket: PocketDataFrame, ligand: LigandDataFrame):
         """
         Calculate distances between ligand's key geometric points and all 
         pocket residues (CA atoms).
@@ -104,7 +104,8 @@ class LigandFeature(BaseFeature):
         ----------
         pocket : kissim.io.PocketDataFrame
             Pocket object.
-        TODO: add ligand
+        ligand_df : kissim.io.LigandDataFrame.df 
+            pandas.DataFrame object.
 
         Returns
         -------
@@ -112,7 +113,7 @@ class LigandFeature(BaseFeature):
             Distances from ligand to pocket residues. 
         """
         pocket_coords = pocket.ca_atoms[["atom.x", "atom.y", "atom.z"]].to_numpy()
-        ligand_coords = ligand_df[['x_coord', 'y_coord', 'z_coord']].to_numpy() #TODO: to be updated
+        ligand_coords = ligand.df[["atom.x", "atom.y", "atom.z"]].to_numpy()
         ligand_centroid = ligand_coords.mean(axis=0)
 
         centroid_distances = []
