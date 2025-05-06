@@ -5,8 +5,9 @@ Defines the kissim fingerprint.
 """
 
 import logging
+from typing import Union
 
-from kissim.io import KlifsToKissimData, PocketBioPython, PocketDataFrame
+from kissim.io import KlifsToKissimData, PocketBioPython, PocketDataFrame, LigandDataFrame
 from kissim.encoding import FingerprintBase
 from kissim.encoding.features import (
     SiteAlignFeature,
@@ -51,11 +52,21 @@ class Fingerprint(FingerprintBase):
                 data.residue_ixs,
                 data.structure_klifs_id,
                 data.kinase_name,
+                data.ligand_expo_id,
             )
         return fingerprint
 
     @classmethod
-    def from_text(cls, text, extension, residue_ids, residue_ixs, structure_name, kinase_name):
+    def from_text(
+        cls, 
+        text: str, 
+        extension: str, 
+        residue_ids: Union[list, int], 
+        residue_ixs: Union[list, int], 
+        structure_name: str, 
+        kinase_name: str,
+        ligand_expo_id: str = None,
+        ):
         """
         Calculate fingerprint for a KLIFS structure (by complex data as text and pocket residue
         IDs and indices).
@@ -88,7 +99,10 @@ class Fingerprint(FingerprintBase):
         pocket_df = PocketDataFrame.from_text(
             text, extension, residue_ids, residue_ixs, structure_name
         )
-        ligand = '' # TODO: add ligand (suppose to be in kissim.io.LigandDataFrame, not implemented yet)
+        if ligand_expo_id:
+            ligand_df = LigandDataFrame.from_text(
+                text, extension, ligand_expo_id
+            ).df
         if pocket_bp is None or pocket_df is None:
             logger.warning(f"{structure_name}: Empty fingerprint (pocket unaccessible).")
             fingerprint = None
@@ -103,7 +117,7 @@ class Fingerprint(FingerprintBase):
                 pocket_bp
             )
             values_dict["spatial"] = fingerprint._get_spatial_features_dict(pocket_df)
-            values_dict["ligand"] = fingerprint._get_ligand_features_dict(pocket_df, ligand)
+            values_dict["ligand"] = fingerprint._get_ligand_features_dict(pocket_df, ligand_df)
             fingerprint.values_dict = values_dict
 
         return fingerprint
@@ -166,7 +180,7 @@ class Fingerprint(FingerprintBase):
 
         return features
 
-    def _get_ligand_features_dict(self, pocket_df, ligand):
+    def _get_ligand_features_dict(self, pocket_df, ligand_df):
         """
         Get ligand-based spatial features.
 
@@ -174,8 +188,7 @@ class Fingerprint(FingerprintBase):
         ----------
         pocket_df : kissim.io.PocketDataFrame
             DataFrame-based pocket object.
-        TODO: add a class for ligand in kissim.io
-        ligand : kissim.io.LigandDataFrame
+        ligand_df : kissim.io.LigandDataFrame
             DataFrame-based ligand object.
 
         Returns
@@ -187,7 +200,7 @@ class Fingerprint(FingerprintBase):
         # Set up physicochemical features
         features = {}
         # Add ligand features
-        feature = LigandFeature.from_pocket(pocket_df, ligand) # TODO: ligand is not defined
+        feature = LigandFeature.from_pocket(pocket_df, ligand_df)
         features["ctd"] = feature._ligand['dist_ctd']
         features["cst"] = feature._ligand['dist_cst']
         features["fct"] = feature._ligand['dist_fct']
